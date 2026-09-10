@@ -23,12 +23,11 @@ const K = {
   pmUsername: "pmUsername",
   passkeyCredId: "passkeyCredId",
   prfSalt: "prfSalt",
-  localMaster: "localMaster",
   favoriteChannels: "favoriteChannels",
 } as const
 
 export async function loadLocal() {
-  const [profile, deviceId, deviceKey, wrappedCdks, channelIndex, previewOn, banners, theme, pmUsername, passkeyCredId, prfSalt, localMaster, favoriteChannels] =
+  const [profile, deviceId, deviceKey, wrappedCdks, channelIndex, previewOn, banners, theme, pmUsername, passkeyCredId, prfSalt, favoriteChannels] =
     await Promise.all([
       get<StoredProfile>(K.profile),
       get<string>(K.deviceId),
@@ -41,7 +40,6 @@ export async function loadLocal() {
       get<string>(K.pmUsername),
       get<string>(K.passkeyCredId),
       get<string>(K.prfSalt),
-      get<string>(K.localMaster),
       get<string[]>(K.favoriteChannels),
     ])
   return {
@@ -56,7 +54,6 @@ export async function loadLocal() {
     pmUsername: pmUsername ?? "chiflame",
     passkeyCredId: passkeyCredId ?? null,
     prfSalt: prfSalt ?? null,
-    localMaster: localMaster ?? null,
     favoriteChannels: favoriteChannels ?? [],
   }
 }
@@ -96,11 +93,18 @@ export async function saveSessionTokens(access: string, refresh?: string | null)
 export async function savePmUsername(username: string) {
   await set(K.pmUsername, username)
 }
-export async function savePasskeyMeta(credId: string, prfSalt: string, localMaster?: string) {
+export async function savePasskeyMeta(credId: string, prfSalt: string) {
   await set(K.passkeyCredId, credId)
   await set(K.prfSalt, prfSalt)
-  if (localMaster) await set(K.localMaster, localMaster)
-  else await del(K.localMaster)
+  // Versions prior to 20260910 stored a fallback master key under this name.
+  // Always remove it after a successful PRF-backed enrollment.
+  await del("localMaster")
+}
+
+/** Transitional read for one-time migration of a pre-PRF vault. */
+export async function takeLegacyLocalMaster(): Promise<string | null> {
+  const legacy = await get<string>("localMaster")
+  return legacy ?? null
 }
 export async function saveFavoriteChannels(ids: string[]) {
   await set(K.favoriteChannels, ids)

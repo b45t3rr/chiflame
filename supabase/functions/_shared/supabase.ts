@@ -46,8 +46,10 @@ export function originFrom(raw?: string): string {
   if (!value) return fallback
   try {
     const u = new URL(value)
-    if (u.protocol !== "https:" && u.protocol !== "http:") return fallback
-    return `${u.protocol}//${u.host}`
+    // The CLI may include its current origin, but pairing links must never be
+    // redirected to an attacker-controlled host.
+    const allowedOrigins = [fallback]
+    return allowedOrigins.includes(u.origin) ? u.origin : fallback
   } catch {
     return fallback
   }

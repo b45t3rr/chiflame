@@ -1,26 +1,11 @@
 import { clientIp, errorJson, json, optionsResponse, readJson } from "../_shared/http.ts"
 import { serviceClient } from "../_shared/supabase.ts"
 
-const ipHits = new Map<string, number[]>()
-function isRateLimited(ip: string, limit = 10, windowMs = 60 * 60 * 1000): boolean {
-  const now = Date.now()
-  const timestamps = (ipHits.get(ip) ?? []).filter((t) => now - t < windowMs)
-  if (timestamps.length >= limit) return true
-  timestamps.push(now)
-  ipHits.set(ip, timestamps)
-  return false
-}
-
 const EMAIL_RE = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return optionsResponse()
   if (req.method !== "POST") return errorJson("method_not_allowed", "POST only", 405)
-
-  const ip = clientIp(req)
-  if (isRateLimited(ip, 10, 60 * 60 * 1000)) {
-    return errorJson("rate_limited", "Too many account creation attempts. Try again later.", 429)
-  }
 
   let body: { email?: string; password?: string }
   try {
@@ -41,6 +26,12 @@ Deno.serve(async (req) => {
   }
 
   const db = serviceClient()
+  const { data: allowed, error: rateError } = await db.rpc("consume_edge_rate_limit", {
+    p_bucket: `provision-user:${clientIp(req)}`,
+    p_limit: 10,
+    p_window_seconds: 3600,
+  })
+  if (rateError || !allowed) return errorJson("rate_limited", "Too many account creation attempts. Try again later.", 429)
   const { data, error } = await db.auth.admin.createUser({
     email,
     password,

@@ -51,19 +51,6 @@ Deno.serve(async (req) => {
   const { data: profile } = await db.from("profiles").select("id").eq("id", user.id).maybeSingle()
   if (!profile) return errorJson("no_vault", "Create a vault before pairing", 409)
 
-  const { data: device, error: devErr } = await db
-    .from("devices")
-    .insert({
-      user_id: user.id,
-      kind: "cli",
-      name: body.device_name ?? session.cli_name ?? "cli",
-      public_key: session.cli_public_key,
-      sign_public_key: session.cli_sign_public_key,
-    })
-    .select("id")
-    .single()
-  if (devErr || !device) return errorJson("server_error", devErr?.message ?? "device insert", 500)
-
   const email = user.email
   if (!email) return errorJson("server_error", "User has no email for session mint", 500)
 
@@ -86,23 +73,17 @@ Deno.serve(async (req) => {
     return errorJson("server_error", otpErr?.message ?? "verifyOtp failed", 500)
   }
 
-  const { data: updated, error: upErr } = await db
-    .from("pairing_sessions")
-    .update({
-      status: "completed",
-      user_id: user.id,
-      device_id: device.id,
-      wrapped_result: body.channel_keys_sealed,
-      poll_access_token: minted.session.access_token,
-      poll_refresh_token: minted.session.refresh_token,
-    })
-    .eq("id", session.id)
-    .eq("status", "pending")
-    .select("id")
-    .maybeSingle()
+  const { data: deviceId, error: completeErr } = await db.rpc("complete_pairing", {
+    p_id: session.id,
+    p_verify_code: body.verify_code.toUpperCase(),
+    p_user_id: user.id,
+    p_device_name: body.device_name ?? session.cli_name ?? "cli",
+    p_wrapped_result: body.channel_keys_sealed,
+    p_access_token: minted.session.access_token,
+    p_refresh_token: minted.session.refresh_token,
+  })
+  if (completeErr) return errorJson("server_error", completeErr.message, 500)
+  if (!deviceId) return errorJson("pairing_expired", "Pairing was already handled", 410)
 
-  if (upErr) return errorJson("server_error", upErr.message, 500)
-  if (!updated) return errorJson("server_error", "pairing session update matched 0 rows", 500)
-
-  return json({ ok: true, device_id: device.id })
+  return json({ ok: true, device_id: deviceId })
 })

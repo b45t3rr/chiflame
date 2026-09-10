@@ -4,7 +4,6 @@ export type PasskeyMaterial = {
   credId: string
   prfSalt: string
   master: Uint8Array
-  usedPrf: boolean
 }
 
 type PrfExt = {
@@ -55,15 +54,12 @@ export async function createDevicePasskey(): Promise<PasskeyMaterial> {
     },
   })) as PublicKeyCredential | null
   if (!cred) throw new Error("No se creó la passkey")
-  const ext = cred.getClientExtensionResults() as PrfExt
-  const prf = ext.prf?.results?.first
-  const master = prf ? hkdfSha256(new Uint8Array(prf), "chiflame-prf-v1", 32) : randomBytes(32)
-  return {
-    credId: bytesToB64url(new Uint8Array(cred.rawId)),
-    prfSalt: bytesToB64url(salt),
-    master,
-    usedPrf: Boolean(prf),
-  }
+  const credId = bytesToB64url(new Uint8Array(cred.rawId))
+  const prfSalt = bytesToB64url(salt)
+  // PRF output is returned on an assertion, not reliably during credential creation.
+  // A random fallback would make the vault recoverable from browser storage.
+  const master = await assertDevicePasskey({ credId, prfSalt })
+  return { credId, prfSalt, master }
 }
 
 export async function assertDevicePasskey(opts: { credId: string; prfSalt: string }): Promise<Uint8Array> {
