@@ -9,6 +9,16 @@
 
 Chiflame te permite recibir alertas seguras en tiempo real en tus dispositivos móviles o de escritorio cuando terminan tus builds, deploys, scripts de CI, backups o cualquier comando de consola, **sin que el servidor jamás tenga acceso al contenido de tus mensajes**.
 
+## Instala la CLI en segundos
+
+Instala Chiflame globalmente desde npm y úsalo desde cualquier terminal:
+
+```bash
+npm install -g chiflame
+```
+
+Después, vinculá tu terminal con la PWA ejecutando `chifla auth pair`.
+
 🌐 **Aplicación Web / PWA:** [https://app.chifla.me](https://app.chifla.me)
 
 ---
