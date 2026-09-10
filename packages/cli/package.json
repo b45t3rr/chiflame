@@ -1,31 +1,56 @@
 {
   "name": "chiflame",
   "version": "0.1.0",
-  "description": "Encrypted notifications from your terminal",
+  "description": "End-to-end encrypted (E2EE) notifications from your terminal to your pocket",
   "type": "module",
+  "author": "b45t3rr",
+  "license": "MIT",
+  "homepage": "https://chifla.me",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b45t3rr/chiflame.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/b45t3rr/chiflame/issues"
+  },
+  "keywords": [
+    "chifla",
+    "chiflame",
+    "notifications",
+    "terminal",
+    "cli",
+    "e2ee",
+    "push",
+    "pwa",
+    "zero-knowledge",
+    "cryptography"
+  ],
   "bin": {
-    "chifla": "./dist/index.js",
-    "chiflame": "./dist/index.js"
+    "chifla": "dist/index.js",
+    "chiflame": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\" && esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "start": "node dist/index.js"
   },
   "engines": {
     "node": ">=20"
   },
-  "dependencies": {
+  "devDependencies": {
     "@chiflame/crypto": "*",
     "@supabase/supabase-js": "^2.57.4",
-    "qrcode-terminal": "^0.12.0"
-  },
-  "devDependencies": {
     "@types/node": "^24.3.1",
     "@types/qrcode-terminal": "^0.12.2",
+    "esbuild": "^0.25.0",
+    "qrcode-terminal": "^0.12.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
