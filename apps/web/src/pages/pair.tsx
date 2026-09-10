@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FlowHeader, GateFrame, Page } from "@/components/page"
 import { callFn } from "@/lib/supabase"
-import { supabase } from "@/lib/supabase"
 import { fingerprint, sealChannelsForCli } from "@/lib/vault"
 import { useSession } from "@/state/session"
 
@@ -42,9 +41,9 @@ export function PairPage() {
     }
     if (gate !== "unlocked" || !id) return
     void (async () => {
-      const { data: raw, error } = await (supabase as any).rpc("get_pairing_session", { p_id: id }).maybeSingle()
-      const data = raw as PairingRpcRow | null
-      if (error || !data) {
+      const { status, data: response } = await callFn<{ session?: PairingRpcRow }>("pair-session", { pairing_id: id })
+      const data = response.session ?? null
+      if (status >= 400 || !data) {
         setState("not_found")
         return
       }

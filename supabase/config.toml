@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.pair-poll]
 verify_jwt = false
 
+[functions.pair-session]
+verify_jwt = true
+
 [functions.pair-complete]
 verify_jwt = true
 

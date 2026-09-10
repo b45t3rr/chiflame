@@ -17,7 +17,7 @@ import {
   type MessagePlaintext,
 } from "@chiflame/crypto"
 import { callFn, supabase } from "./supabase"
-import { loadLocal, saveChannelIndex, saveDevice, savePasskeyMeta, savePmUsername, saveProfile, saveWrappedCdks, type StoredProfile } from "./idb"
+import { loadLocal, saveChannelIndex, saveDevice, savePasskeyMeta, savePmUsername, saveProfile, saveWrappedCdks, takeLegacyLocalMaster, type StoredProfile } from "./idb"
 import { assertDevicePasskey, createDevicePasskey } from "./webauthn"
 
 export type Channel = {
@@ -156,9 +156,9 @@ export async function createVaultWithPasskey(): Promise<UnlockedVault> {
   const pk = await createDevicePasskey()
   const uid = crypto.randomUUID()
   const email = `u${uid.replace(/-/g, "")}@chiflame.app`
-  const kdf = { alg: pk.usedPrf ? "webauthn-prf" : "device-local", version: 1, salt: pk.prfSalt }
+  const kdf = { alg: "webauthn-prf", version: 1, salt: pk.prfSalt }
   const vault = await createVaultFromMaster(pk.master, kdf, email)
-  await savePasskeyMeta(pk.credId, pk.prfSalt, pk.usedPrf ? undefined : bytesToB64url(pk.master))
+  await savePasskeyMeta(pk.credId, pk.prfSalt)
   return vault
 }
 
@@ -168,7 +168,7 @@ export async function rotateDevicePasskey(vault: UnlockedVault): Promise<void> {
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
-      kdf: { alg: pk.usedPrf ? "webauthn-prf" : "device-local", version: 1, salt: pk.prfSalt },
+      kdf: { alg: "webauthn-prf", version: 1, salt: pk.prfSalt },
       wrapped_user_key: wrapSecret(pk.master, vault.userKey),
     })
     .eq("id", vault.userId)
@@ -176,19 +176,16 @@ export async function rotateDevicePasskey(vault: UnlockedVault): Promise<void> {
 
   const { error: authError } = await supabase.auth.updateUser({ password: authHashFromMaster(pk.master) })
   if (authError) throw new Error(authError.message)
-  await savePasskeyMeta(pk.credId, pk.prfSalt, pk.usedPrf ? undefined : bytesToB64url(pk.master))
+  await savePasskeyMeta(pk.credId, pk.prfSalt)
 }
 
 export async function unlockWithPasskey(): Promise<UnlockedVault> {
   const local = await loadLocal()
   if (!local.passkeyCredId || !local.prfSalt) throw new Error("No hay passkey en este dispositivo")
-  let master: Uint8Array
-  try {
-    master = await assertDevicePasskey({ credId: local.passkeyCredId, prfSalt: local.prfSalt })
-  } catch (e) {
-    if (!(e instanceof Error) || e.message !== "PRF_MISSING" || !local.localMaster) throw e
-    master = b64urlToBytes(local.localMaster)
-  }
+  const legacyMaster = await takeLegacyLocalMaster()
+  const master = legacyMaster
+    ? b64urlToBytes(legacyMaster)
+    : await assertDevicePasskey({ credId: local.passkeyCredId, prfSalt: local.prfSalt })
   const { error } = await supabase.auth.signInWithPassword({
     email: local.pmUsername,
     password: authHashFromMaster(master),
@@ -197,7 +194,9 @@ export async function unlockWithPasskey(): Promise<UnlockedVault> {
     const sess = await supabase.auth.getSession()
     if (!sess.data.session) throw new Error(error.message)
   }
-  return unlockVaultWithMaster(master)
+  const vault = await unlockVaultWithMaster(master)
+  if (legacyMaster) await rotateDevicePasskey(vault)
+  return vault
 }
 
 export async function unlockVault(passphrase: string): Promise<UnlockedVault> {

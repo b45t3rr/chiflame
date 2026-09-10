@@ -18,13 +18,12 @@ Deno.serve(async (req) => {
 
   const ip = clientIp(req)
   const db = serviceClient()
-  const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-  const { count } = await db
-    .from("pairing_sessions")
-    .select("id", { count: "exact", head: true })
-    .eq("client_ip", ip)
-    .gte("created_at", hourAgo)
-  if ((count ?? 0) >= 10) {
+  const { data: allowed, error: rateError } = await db.rpc("consume_edge_rate_limit", {
+    p_bucket: `pair-init:${ip}`,
+    p_limit: 10,
+    p_window_seconds: 3600,
+  })
+  if (rateError || !allowed) {
     return errorJson("rate_limited", "Too many pairing attempts", 429)
   }
 
