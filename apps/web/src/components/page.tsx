@@ -30,3 +30,7 @@ export function AppFrame({ children, className = "" }: { children: ReactNode; cl
     </div>
   )
 }
+
+export function FlowHeader({ step, total, eyebrow, title, description }: { step: number; total: number; eyebrow: string; title: string; description?: string }) {
+  return <header className="space-y-4"><div className="flex gap-1" aria-label={`Paso ${step} de ${total}`}>{Array.from({ length: total }, (_, i) => <span key={i} className={`h-1 flex-1 rounded-full ${i < step ? "bg-accent" : "bg-muted"}`} />)}</div><div><p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{eyebrow} · {step}/{total}</p><h1 className="mt-1 text-xl font-semibold tracking-tight text-foreground">{title}</h1>{description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>}</div></header>
+}

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { GateFrame, Page } from "@/components/page"
+import { FlowHeader, GateFrame, Page } from "@/components/page"
 import { callFn } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
 import { fingerprint, sealChannelsForCli } from "@/lib/vault"
@@ -120,10 +120,7 @@ export function PairPage() {
   return (
     <GateFrame>
       <Page className="py-6">
-        <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-          Emparejamiento seguro
-        </span>
-        <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Vincular CLI</h1>
+        <FlowHeader step={2} total={2} eyebrow="Emparejamiento seguro" title="Vincular CLI" description="Confirmá que esta terminal es la que querés autorizar." />
 
         {state === "loading" && (
           <div className="mt-8 h-28 animate-pulse rounded-md bg-muted/60" />
