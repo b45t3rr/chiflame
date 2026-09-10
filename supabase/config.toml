@@ -1,0 +1,25 @@
+project_id = "tnormabytsycjwnwrvip"
+
+[functions.pair-init]
+verify_jwt = false
+
+[functions.pair-poll]
+verify_jwt = false
+
+[functions.pair-complete]
+verify_jwt = true
+
+[functions.pair-deny]
+verify_jwt = true
+
+[functions.device-revoke]
+verify_jwt = true
+
+[functions.push-register]
+verify_jwt = true
+
+[functions.dispatch-push]
+verify_jwt = false
+
+[functions.provision-user]
+verify_jwt = false

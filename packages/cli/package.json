@@ -1,0 +1,32 @@
+{
+  "name": "chiflame",
+  "version": "0.1.0",
+  "description": "Encrypted notifications from your terminal",
+  "type": "module",
+  "bin": {
+    "chifla": "./dist/index.js",
+    "chiflame": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "start": "node dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@chiflame/crypto": "*",
+    "@supabase/supabase-js": "^2.57.4",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "@types/qrcode-terminal": "^0.12.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

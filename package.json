@@ -1,0 +1,17 @@
+{
+  "name": "chiflame",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @chiflame/crypto && npm run build -w chiflame && npm run build -w @chiflame/web",
+    "test": "npm run test -w @chiflame/crypto && npm run test -w chiflame",
+    "dev": "npm run dev -w @chiflame/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

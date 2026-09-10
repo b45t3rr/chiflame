@@ -1,0 +1,17 @@
+{
+  "name": "Chiflame",
+  "short_name": "Chiflame",
+  "start_url": "/inbox",
+  "display": "standalone",
+  "background_color": "#141714",
+  "theme_color": "#141714",
+  "icons": [
+    {
+      "src": "/mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "gcm_sender_id": "103953800507"
+}
