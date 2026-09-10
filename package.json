@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w @chiflame/crypto && npm run build -w chiflame && npm run build -w @chiflame/web",
+    "build": "npm run build -w @chiflame/crypto && npm run build -w chiflame && npm run build -w @chiflame/web && npm run build -w @chiflame/landing",
     "test": "npm run test -w @chiflame/crypto && npm run test -w chiflame",
     "dev": "npm run dev -w @chiflame/web"
   },
