@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { Check, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { GateFrame, Page } from "@/components/page"
+import { FlowHeader, GateFrame, Page } from "@/components/page"
 import { isIos, isStandalone, pushSupported } from "@/lib/platform"
 import { useSession } from "@/state/session"
 import { startEnablePush, warmServiceWorker } from "@/lib/push"
@@ -67,24 +67,7 @@ export function OnboardingPage() {
     <GateFrame>
       <Page className="flex min-h-[75dvh] flex-1 flex-col justify-between py-6">
         <div>
-          {/* Segmented Progress Bar */}
-          <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className={`h-1 flex-1 rounded-full transition-colors ${
-                  i <= step ? "bg-accent" : "bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-wider">
-              Paso {step} de 4
-            </span>
-            <h1 className="mt-1 text-lg font-semibold tracking-tight text-foreground">{title}</h1>
-          </div>
+          <FlowHeader step={step} total={4} eyebrow="Configuración segura" title={title} />
 
           {step === 1 && (
             <div className="mt-6 space-y-4">
