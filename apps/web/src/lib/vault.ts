@@ -195,7 +195,18 @@ export async function unlockWithPasskey(): Promise<UnlockedVault> {
     if (!sess.data.session) throw new Error(error.message)
   }
   const vault = await unlockVaultWithMaster(master)
-  if (legacyMaster) await rotateDevicePasskey(vault)
+  if (legacyMaster) {
+    // Older vaults used a locally retained master key. Re-enroll when this
+    // device supports PRF, but never make a successful legacy unlock fail just
+    // because a mobile authenticator cannot supply the PRF extension.
+    try {
+      await rotateDevicePasskey(vault)
+    } catch {
+      // The legacy credential remains valid until the user can re-enroll with
+      // a PRF-capable authenticator. Access to an existing vault must not be
+      // denied because an optional migration was cancelled or unsupported.
+    }
+  }
   return vault
 }
 
